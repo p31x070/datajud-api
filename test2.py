@@ -1,30 +1,7 @@
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-import json
-import datetime
-import webbrowser
+import os
+from jinja2 import Environment, FileSystemLoader
 from dotenv import load_dotenv
-
-def ler_arquivo_json(nome_arquivo):
-    with open(nome_arquivo, "r") as file:
-        return json.load(file)
-
-def criar_ambiente_jinja2():
-    return Environment(
-        loader=FileSystemLoader("."),
-        autoescape=select_autoescape()
-    )
-
-def imprimir_informacoes(numero_processo, tribunal, movimentos):
-    print("Número do processo:", numero_processo)
-    print("Tribunal:", tribunal)
-    print("Movimentos:")
-    for movimento in movimentos:
-        nome = movimento["nome"]
-        data_hora_original = movimento["dataHora"]
-        data_hora = datetime.datetime.strptime(data_hora_original, "%Y-%m-%dT%H:%M:%S.%fZ")
-        data_hora_legivel = data_hora.strftime("%d/%m/%Y %H:%M:%S")
-        print(" - ", data_hora_legivel, " - ", nome)
-        movimento["dataHora"] = data_hora
+import json
 
 def ordenar_movimentos_por_data(movimentos):
     return sorted(movimentos, key=lambda x: x["dataHora"], reverse=True)
@@ -46,27 +23,29 @@ def salvar_relatorio_html(relatorio_html, nome_arquivo):
     with open(nome_arquivo, "w") as file:
         file.write(relatorio_html)
 
+def gerar_nota_obsidian(numero_processo, movimentos_recentes):
+    nome_arquivo = f"andamentos{numero_processo}.md"
+    diretorio = os.getenv("OBSIDIAN_DIRECTORY")
+    caminho_arquivo = os.path.join(diretorio, nome_arquivo)
+    with open(caminho_arquivo, "w") as file:
+        file.write(f"Número do processo: {numero_processo}\n")
+        file.write("Três movimentos mais recentes:\n")
+        for movimento in movimentos_recentes:
+            nome = movimento["nome"]
+            data_hora_legivel = movimento["data_hora_legivel"]
+            file.write(f"- {data_hora_legivel} - {nome}\n")
+
 def main():
     dados = ler_arquivo_json("response.json")
-    env = criar_ambiente_jinja2()
+    env = Environment(loader=FileSystemLoader("."))
     template = env.get_template("template.html")
-    
+    load_dotenv()
+
     numero_processo = dados['hits']['hits'][1]["_source"]["numeroProcesso"]
     tribunal = dados['hits']['hits'][1]["_source"]["tribunal"]
     movimentos = dados['hits']['hits'][1]["_source"]["movimentos"]
 
-    imprimir_informacoes(numero_processo, tribunal, movimentos)
-
-    movimentos_ordenados = ordenar_movimentos_por_data(movimentos)
-
-    movimentos_recentes = imprimir_tres_movimentos_recentes(movimentos_ordenados)
-
+    movimentos_recentes = imprimir_tres_movimentos_recentes(movimentos)
     relatorio_html = renderizar_template(template, numero_processo, tribunal, movimentos, movimentos_recentes)
-
     salvar_relatorio_html(relatorio_html, "relatorio.html")
-
-    # abrir relatório no navegador
-    webbrowser.open("relatorio.html")
-
-if __name__ == "__main__":
-    main()
+    gerar_nota_obsidian(numero_processo, movimentos_recentes)
