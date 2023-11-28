@@ -41,6 +41,7 @@ if __name__ == "__main__":
                 lambda endpoint: search_endpoint(endpoint, numero_processo), endpoints
             )
         )
+    response_dict = {}
 
     for result in results:
         if result:
