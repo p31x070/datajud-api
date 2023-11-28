@@ -2,6 +2,7 @@ import os
 from jinja2 import Environment, FileSystemLoader
 from dotenv import load_dotenv
 import json
+import webbrowser
 
 def ordenar_movimentos_por_data(movimentos):
     return sorted(movimentos, key=lambda x: x["dataHora"], reverse=True)
@@ -36,7 +37,9 @@ def gerar_nota_obsidian(numero_processo, movimentos_recentes):
             file.write(f"- {data_hora_legivel} - {nome}\n")
 
 def main():
-    dados = ler_arquivo_json("response.json")
+    with open("response copy.json", "r") as file:
+        dados = json.load(file)
+
     env = Environment(loader=FileSystemLoader("."))
     template = env.get_template("template.html")
     load_dotenv()
@@ -48,4 +51,6 @@ def main():
     movimentos_recentes = imprimir_tres_movimentos_recentes(movimentos)
     relatorio_html = renderizar_template(template, numero_processo, tribunal, movimentos, movimentos_recentes)
     salvar_relatorio_html(relatorio_html, "relatorio.html")
+    #abrir relatório no navegador
+    webbrowser.open("relatorio.html")
     gerar_nota_obsidian(numero_processo, movimentos_recentes)

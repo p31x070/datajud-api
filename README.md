@@ -30,3 +30,14 @@ O relatório em html, é necessário passar o diretório de saída como parâmet
 
 ```bash
 python3 monitor.py /home/user/monitor/output.html
+
+## O script endpoints.py
+
+Recupera os endpoints para a API pública do Datajud.  A ideia é que o usuário possa passar o número de processos e o tribunal para gerar os relatórios
+
+Uma outra forma de fazer isso seria passar o número de processos e o tribunal para o script e gerar o relatório dinamicamente.  Ou seja, o usuário não precisa passar o número de processos.
+
+Ou ainda, pegar o banco de dados de processos cadastrados e fazer a busca pelos endpoins diretamente a partir destes dados.
+
+
+
